@@ -11,6 +11,7 @@ const PORT: Number = 8000;
 dotenv.config()
 connectDB()
 
+app.use(express.json())
 app.use("/api", apiRoute)
 
 app.get("/", (req: Request, res: Response) => {

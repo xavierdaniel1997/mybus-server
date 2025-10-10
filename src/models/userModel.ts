@@ -7,9 +7,12 @@ const userSchema = new Schema<IUser>({
         type: String,
         // required: true,
     },
-    secondName: {
+    lastName: {
         type: String,
         // required: true
+    },
+    phone: {
+        type: Number,
     },
     email: {
         type: String,
@@ -32,7 +35,7 @@ const userSchema = new Schema<IUser>({
         type: Boolean,
         default: false,
     },
-    isRegComplet: {
+     isRegComplet: {
         type: Boolean,
         default: false,
     },

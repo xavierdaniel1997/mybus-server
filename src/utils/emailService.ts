@@ -19,10 +19,10 @@ export enum EmailType {
 const emailTemplates = {
     [EmailType.OTP]: (data: { otp: string }) => ({
         subject: "Your OTP Code",
-        text: `TechWord\n\nYour OTP code is ${data.otp}. It is valid for 1 minute.`,
+        text: `MYBUS\n\nYour OTP code is ${data.otp}. It is valid for 1 minute.`,
         html: `
       <div style="font-family: Arial, sans-serif; padding: 16px;">
-        <h2 style="color: #333; margin-bottom: 12px;">TechWord</h2>
+        <h2 style="color: #333; margin-bottom: 12px;">MYBUS</h2>
         <p>Your OTP code is <h3><strong>${data.otp}</strong></h3>. It is valid for 1 minute.</p>
       </div>
     `,

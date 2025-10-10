@@ -2,7 +2,8 @@ import UserModel from "../models/userModel"
 import { IUser } from "../types/user"
 
 export const findByEmail = async (email: string) : Promise<IUser | null> => {
-    return await UserModel.findOne({email})
+    console.log("checking the email is comming....................", email)
+    return await UserModel.findOne({ email })
 }
 
 export const createUser = async (data: IUser): Promise<IUser> => {

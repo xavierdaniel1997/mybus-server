@@ -225,4 +225,4 @@ const logoutUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 
-export {registerUser, verifyOtpAndUser, resendOtp, registerVerifiedUser};
+export {registerUser, verifyOtpAndUser, resendOtp, registerVerifiedUser, loginUser};

@@ -5,7 +5,8 @@ import {EmailType, sendEmail} from "../utils/emailService";
 import {createOtp, deleteOtp, findOtp} from "../service/otpService";
 import bcrypt from "bcryptjs";
 import {IUser, IUserRole} from "../types/user";
-import { generateAccessToken, generateRefreshToken } from "../utils/generateToken";
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/generateToken";
+import { JwtPayload } from "jsonwebtoken";
 
 const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -202,7 +203,7 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
     res.setHeader("Authorization", `Bearer ${accessToken}`);
     res
       .status(200)
-      .json({ user: userData, accessToken, message: "Login successfully" });
+      .json({ user: userData, accessToken, expiresIn: 15 * 60, message: "Login successfully" });
   } catch (error: any) {
     res.status(401).json({
       message: error.message || "Failed to login",
@@ -225,4 +226,27 @@ const logoutUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 
-export {registerUser, verifyOtpAndUser, resendOtp, registerVerifiedUser, loginUser};
+const refreshAccessToken = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies.refreshToken;
+    if (!token) {
+      return res.status(401).json({ message: "No refresh token provided" });
+    }
+    const decoded = verifyRefreshToken(token) as JwtPayload;
+    const newAccessToken = generateAccessToken(
+      decoded._id,
+      decoded.role,
+      decoded.firstName,
+      decoded.lastName,
+      decoded.email
+    );
+    return res.status(200).json({ accessToken: newAccessToken , expiresIn: 15 * 60, });
+  } catch (error: any) {
+    return res
+      .status(403)
+      .json({ message: "Invalid or expired refresh token" });
+  }
+};
+
+
+export {registerUser, verifyOtpAndUser, resendOtp, registerVerifiedUser, loginUser, logoutUser, refreshAccessToken};

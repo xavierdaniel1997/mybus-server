@@ -9,6 +9,6 @@ router.post("/resend-otp", resendOtp);
 router.put("/register-verified-user", registerVerifiedUser);
 router.post("/login-user", loginUser),
 router.post("/logout-user", logoutUser),
-router.post("/new-accesstoken", refreshAccessToken)
+router.post("/new-accesstoken", refreshAccessToken)   
 
-export default router;
+export default router;    

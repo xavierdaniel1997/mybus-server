@@ -5,6 +5,6 @@ import { isAdmin, isAuth } from '../middleware/isAuth';
 
 const router = express.Router();
 
-router.post("/create-location", isAuth, isAdmin, upload.single("file"), addLocationController);
+router.post("/create-location", isAuth, isAdmin, upload.single("locationImage"), addLocationController);
 
 export default router;

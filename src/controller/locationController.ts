@@ -1,7 +1,7 @@
 import express, {Request, Response} from "express";
 import { uploadToCloudinary } from "../utils/uploadAssets";
 import { ILocationStatus } from "../types/location";
-import { createLocation, deleteLocationById, findStation, getAllLocations } from "../service/locationService";
+import { createLocation, deleteLocationById, findStation, getAllLocations, updateLocationById } from "../service/locationService";
 
 const addLocationController = async (req: Request, res: Response) => {
     console.log("from the addlocation controller", req.body);
@@ -68,10 +68,25 @@ const getLocations = async (req: Request, res: Response) => {
 }
 
 const updateLocation = async (req: Request, res: Response) => {
-  try{
-    res.status(200).json({message: "Successfully updated the location details"})
-  }catch(error: any){
-    res.status(401).json({message: "Failed to update the location details", error: error.message})
+  try {
+    const { locationId } = req.params;
+    if(!locationId){
+      throw new Error("LoationId is not found")
+    }
+    const updatedLocation = await updateLocationById(locationId, req.body);
+
+    if (!updatedLocation) {
+      return res.status(404).json({ message: "Location not found" });
+    }
+
+    res.status(200).json({
+      message: "Location updated successfully",
+      data: updatedLocation,
+    });
+  } catch (error: any) {
+    res
+      .status(500)
+      .json({ message: "Failed to update location", error: error.message });
   }
 }
 
@@ -89,4 +104,4 @@ const deleteLocation = async (req: Request, res: Response) => {
 }
 
 
-export {addLocationController, getLocations, deleteLocation};
+export {addLocationController, getLocations, deleteLocation, updateLocation};

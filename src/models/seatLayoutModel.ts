@@ -42,6 +42,7 @@ const seatLayoutSchema = new Schema<ISeatLayout>({
       {
         id: { type: String, required: true },
         type: { type: String, enum: ['seater', 'sleeper', 'Aisle'], required: true },
+        seatNumber: { type: String, required: true }
       },
     ],
   ], 
@@ -50,6 +51,7 @@ const seatLayoutSchema = new Schema<ISeatLayout>({
       {
         id: { type: String, required: true },
         type: { type: String, enum: ['seater', 'sleeper', 'Aisle'], required: true },
+        seatNumber: { type: String, required: true }
       },
     ],
   ], 

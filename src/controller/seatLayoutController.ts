@@ -1,11 +1,16 @@
 import {Request, Response} from "express";
 import {ISeatLayout} from "../types/seatLayout";
-import {createSeatLayout} from "../service/seatLayoutService";
+import {createSeatLayout, existingSeatLayout, getAllSeatLayoutNames} from "../service/seatLayoutService";
 
 const createSeatingLayout = async (req: Request, res: Response) => {
   try {
     console.log("req.body form the creat seating layout", req.body);
     const data: ISeatLayout = req.body;
+
+    const existing = await existingSeatLayout(data.name);
+  if (existing) {
+    throw new Error("Seat layout with this name already exists.");
+  }
 
     const layout = await createSeatLayout(data);
     res
@@ -13,7 +18,7 @@ const createSeatingLayout = async (req: Request, res: Response) => {
       .json({message: "Successfully create seating Layout", layout});
   } catch (error: any) {
     res
-      .status(401)
+      .status(400)
       .json({
         message: "Failed to create the seating Layout",
         error: error.message,
@@ -22,4 +27,13 @@ const createSeatingLayout = async (req: Request, res: Response) => {
   }
 };
 
-export {createSeatingLayout};
+const fetchAllSeatLayoutNames = async (req: Request, res: Response) => {
+  try{
+    const layoutNames = await getAllSeatLayoutNames()
+    res.status(200).json({message : "Successfully fetch the layout", layoutNames})
+  }catch(error: any){
+    res.status(400).json({message: "Failed to fetch the layout names", error: error.message})
+  }
+}
+
+export {createSeatingLayout, fetchAllSeatLayoutNames};

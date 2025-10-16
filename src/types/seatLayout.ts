@@ -3,6 +3,7 @@ export type SeatType = "seater" | "sleeper" | "Aisle";
 export interface ISeat {
   id: string;
   type: SeatType;
+  seatNumber: string;
 }
 
 export type DeckLayout = ISeat[][];

@@ -1,12 +1,14 @@
-import express from 'express';
-import authRoute from './authRoute';
-import locationRoute from './locationRoute';
-import seatLayoutRoute from './seatLayoutRoute';
+import express from "express";
+import authRoute from "./authRoute";
+import locationRoute from "./locationRoute";
+import seatLayoutRoute from "./seatLayoutRoute";
+import busRoute from "./busRoute";
 
 const router = express.Router();
 
 router.use("/auth", authRoute);
-router.use("/location", locationRoute)
-router.use("/bustype", seatLayoutRoute)
+router.use("/location", locationRoute);
+router.use("/bustype", seatLayoutRoute);
+router.use("/mybus", busRoute);
 
 export default router;

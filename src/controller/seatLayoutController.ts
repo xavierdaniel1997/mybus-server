@@ -1,6 +1,6 @@
 import {Request, Response} from "express";
 import {ISeatLayout} from "../types/seatLayout";
-import {createSeatLayout, existingSeatLayout, getAllSeatLayoutNames} from "../service/seatLayoutService";
+import {createSeatLayout, existingSeatLayout, getAllSeatingLayout, getAllSeatLayoutNames} from "../service/seatLayoutService";
 
 const createSeatingLayout = async (req: Request, res: Response) => {
   try {
@@ -30,10 +30,19 @@ const createSeatingLayout = async (req: Request, res: Response) => {
 const fetchAllSeatLayoutNames = async (req: Request, res: Response) => {
   try{
     const layoutNames = await getAllSeatLayoutNames()
-    res.status(200).json({message : "Successfully fetch the layout", layoutNames})
+    res.status(200).json({message : "Successfully fetch the layout",  bustypeLayout: layoutNames})
   }catch(error: any){
     res.status(400).json({message: "Failed to fetch the layout names", error: error.message})
   }
 }
 
-export {createSeatingLayout, fetchAllSeatLayoutNames};
+const fetchAllLayoutController = async (req: Request, res: Response) => {
+  try{
+    const layouts = await getAllSeatingLayout()
+    res.status(200).json({message : "Successfully fetch the layouts",  bustypeLayout: layouts})
+  }catch(error: any){
+     res.status(400).json({message: "Failed to fetch the layout", error: error.message})
+  }
+}
+
+export {createSeatingLayout, fetchAllSeatLayoutNames, fetchAllLayoutController};

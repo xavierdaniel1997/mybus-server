@@ -8,10 +8,6 @@ export const existingSeatLayout = async (name: string) => {
 }
 
 export const createSeatLayout = async (data: ISeatLayout) => {
-  // const existing = await SeatLayoutModel.findOne({ name: data.name });
-  // if (existing) {
-  //   throw new Error("Seat layout with this name already exists.");
-  // }
   const layout = await SeatLayoutModel.create({
     ...data,
     createdAt: new Date(),
@@ -21,6 +17,10 @@ export const createSeatLayout = async (data: ISeatLayout) => {
 };
 
 export const getAllSeatLayoutNames = async () => {
-  return await SeatLayoutModel.find({}, {name: 1, _id: 0})
+  return await SeatLayoutModel.find({}, {name: 1})
+}
+
+export const getAllSeatingLayout = async () => {
+  return await SeatLayoutModel.find()
 }
 

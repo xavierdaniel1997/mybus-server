@@ -8,4 +8,5 @@ router.post("/create-layout", isAuth, isAdmin, createSeatingLayout)
 router.get("/get-layout-names",isAuth, isAdmin, fetchAllSeatLayoutNames)
 router.get("/get-all-layouts", fetchAllLayoutController)
 
+
 export default router;

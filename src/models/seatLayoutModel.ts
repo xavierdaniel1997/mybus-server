@@ -55,6 +55,7 @@ const seatLayoutSchema = new Schema<ISeatLayout>({
       },
     ],
   ], 
+  
   createdAt: {
     type: Date,
     default: Date.now,

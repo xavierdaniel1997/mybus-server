@@ -1,32 +1,43 @@
 import {Request, Response} from "express";
-import { uploadMultipleToCloudinary } from "../utils/uploadAssets";
+import {uploadMultipleToCloudinary} from "../utils/uploadAssets";
+import {getSeatLayoutById} from "../service/seatLayoutService";
+import {createBusService, getBusDetail} from "../service/busRouteService";
 
 const createBusController = async (req: Request, res: Response) => {
   try {
-    console.log("req.body form the createBusController", req.body);
+    // console.log("req.body form the createBusController", req.body);
+    const {
+      name,
+      registrationNo,
+      brand,
+      busType,
+      layoutId,
+      information,
+      features,
+    } = req.body;
 
-    let busImages: string[] = []
+    let images: string[] = [];
     if (req.files && Array.isArray(req.files)) {
-      console.log("Uploaded files:", req.files);
-      req.files.forEach((file, index) => {
-        console.log(`File ${index + 1}:`, {
-          originalname: file.originalname,
-          mimetype: file.mimetype,      
-          size: file.size,
-        });
+      images = await uploadMultipleToCloudinary(req.files, {
+        folder: "Mybus/mybusimages",
+        resource_type: "image",
       });
-
-    const uploadedImageUrls = await uploadMultipleToCloudinary(req.files, {
-            folder: "Mybus/mybusimages",
-            resource_type: "image",
-          });
-          console.log("files uploaded!!!!!!!!!!!!!!!!!!!", uploadedImageUrls);
-           busImages = uploadedImageUrls;
-    } else {
-      console.log("⚠️ No files uploaded!");
     }
-    console.log("check the image that uploaded in cloudianry", busImages)
-    res.status(200).json({message: "Successfully create the bus"});
+
+    const newBus = await createBusService({
+      name,
+      registrationNo,
+      brand,
+      busType,
+      layoutId,
+      information,
+      features: JSON.parse(features),
+      images,
+    });
+
+    res
+      .status(200)
+      .json({message: "Successfully create the bus", data: newBus});
   } catch (error: any) {
     res
       .status(400)
@@ -34,4 +45,19 @@ const createBusController = async (req: Request, res: Response) => {
   }
 };
 
-export {createBusController};
+
+const getBusDetailController = async (req: Request, res: Response) => {
+  try{
+    const {busId} = req.params;
+    if(!busId){
+      throw new Error("busId is not found")
+    }
+    console.log("bus id...........", busId)
+    const busDetail = await getBusDetail(busId);
+    res.status(200).json({message: "Successfully fetch the bus detail", data: busDetail})
+  }catch(error: any){
+    res.status(400).json({message: "Failed to fetch the bus datails", error: error.message})
+  }
+}
+
+export {createBusController, getBusDetailController};

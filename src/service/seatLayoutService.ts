@@ -20,6 +20,10 @@ export const getAllSeatLayoutNames = async () => {
   return await SeatLayoutModel.find({}, {name: 1})
 }
 
+export const getSeatLayoutById = async (id: string) => {
+  return await SeatLayoutModel.findById(id)
+}
+
 export const getAllSeatingLayout = async () => {
   return await SeatLayoutModel.find()
 }

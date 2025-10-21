@@ -6,7 +6,7 @@ import { createRouteController } from '../controller/busrouteController';
 
 const router = express.Router();
 
-router.post("/create-new-busroute", isAdmin, isAuth, createRouteController)            
+router.post("/create-new-busroute", isAuth, isAdmin, createRouteController)            
 
 
 export default router;

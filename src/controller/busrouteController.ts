@@ -1,8 +1,14 @@
 import { Request, Response } from "express";
+import { createBusRouteService } from "../service/routeService";
 
 const createRouteController  = async (req: Request, res: Response) => {
     try{
-        res.status(200).json({message: "Successfully created new route"})
+         const route = await createBusRouteService(req.body);
+    res.status(201).json({
+      success: true,
+      message: "Bus route created successfully",
+      data: route,
+    });
     }catch(error){
         res.status(400).json({message: "Failed to create a new route"})
     }

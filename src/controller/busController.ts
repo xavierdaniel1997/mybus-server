@@ -1,11 +1,10 @@
 import {Request, Response} from "express";
-import {uploadMultipleToCloudinary} from "../utils/uploadAssets";
+import {deleteFromCloudinary, uploadMultipleToCloudinary} from "../utils/uploadAssets";
 import {getSeatLayoutById} from "../service/seatLayoutService";
-import {createBusService, getBusDetail} from "../service/busRouteService";
+import {createBusService, getBusDetail, updateBusService} from "../service/busService";
 
 const createBusController = async (req: Request, res: Response) => {
   try {
-    // console.log("req.body form the createBusController", req.body);
     const {
       name,
       registrationNo,
@@ -46,6 +45,87 @@ const createBusController = async (req: Request, res: Response) => {
 };
 
 
+const updateBusController = async (req: Request, res: Response) => {
+  try {
+    const { busId } = req.params;
+    const {
+      name,
+      registrationNo,
+      brand,
+      busType,
+      layoutId,
+      information,
+      features,
+    } = req.body;
+
+    if(!busId){
+      throw new Error("busId is not found")
+    }
+    const existingBus = await getBusDetail(busId);
+    if (!existingBus) {
+      return res.status(404).json({ message: "Bus not found" });
+    }
+
+    // Step Prepare new image list
+    let updatedImages = existingBus.images; // default: keep old ones
+
+    // Step If new files are uploaded
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      // Delete old images from Cloudinary
+      if (existingBus.images && existingBus.images.length > 0) {
+        await Promise.all(
+          existingBus.images.map(async (imgUrl) => {
+            try {
+              await deleteFromCloudinary(imgUrl);
+            } catch (err) {
+              console.warn("Failed to delete old image:", imgUrl);
+            }
+          })
+        );
+      }
+
+      updatedImages = await uploadMultipleToCloudinary(req.files, {
+        folder: "Mybus/mybusimages",
+        resource_type: "image",
+      });
+    }
+
+    let parsedFeatures = features;
+    if (typeof features === "string") {
+      try {
+        parsedFeatures = JSON.parse(features);
+      } catch {
+        return res.status(400).json({ message: "Invalid features format" });
+      }
+    }
+
+    const updateData = {
+      name,
+      registrationNo,
+      brand,
+      busType,
+      layoutId,
+      information,
+      features: parsedFeatures,
+      images: updatedImages,
+    };
+
+    const updatedBus = await updateBusService(busId, updateData);
+
+    res
+      .status(200)
+      .json({ message: "Bus updated successfully", data: updatedBus });
+  } catch (error: any) {
+    console.error("Error updating bus:", error);
+    res.status(400).json({
+      message: "Failed to update bus",
+      error: error.message,
+    });
+  }
+};
+
+
+
 const getBusDetailController = async (req: Request, res: Response) => {
   try{
     const {busId} = req.params;
@@ -60,4 +140,4 @@ const getBusDetailController = async (req: Request, res: Response) => {
   }
 }
 
-export {createBusController, getBusDetailController};
+export {createBusController, updateBusController, getBusDetailController};

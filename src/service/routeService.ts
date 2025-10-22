@@ -20,6 +20,6 @@ export const getAllBusRoutesService = async () => {
 /**
  * Get a single route by ID
  */
-export const getBusRouteByIdService = async (id: string) => {
+export const getBusRouteById = async (id: string) => {
   return await BusRouteModel.findById(id).populate("bus", "name registrationNo busType");
 };

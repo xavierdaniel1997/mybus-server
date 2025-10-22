@@ -1,4 +1,4 @@
-import { Document, Types } from "mongoose";
+import { Types } from "mongoose";
 
 export interface IGeoPoint {
   name: string;
@@ -8,7 +8,7 @@ export interface IGeoPoint {
   landmark?: string;
 }
 
-export interface IBusRoute extends Document {
+export interface IBusRoute{
   bus: Types.ObjectId;            // Reference to Bus
   routeName: string;              // e.g. "Bangalore - Ernakulam"
   source: IGeoPoint;              // Start point

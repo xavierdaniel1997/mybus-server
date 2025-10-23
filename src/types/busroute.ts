@@ -9,7 +9,7 @@ export interface IGeoPoint {
 }
 
 export interface IBusRoute{
-  bus: Types.ObjectId;            // Reference to Bus
+  busId: Types.ObjectId;            // Reference to Bus
   routeName: string;              // e.g. "Bangalore - Ernakulam"
   source: IGeoPoint;              // Start point
   destination: IGeoPoint;         // End point

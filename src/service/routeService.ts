@@ -5,9 +5,21 @@ import { IBusRoute } from "../types/busroute";
 /**
  * Create a new bus route
  */
-export const createBusRouteService = async (data: IBusRoute) => {
+export const createBusRouteService = async (data: IBusRoute) => { 
   const route = new BusRouteModel(data);
   return await route.save();
+};
+
+/**
+ * Update an existing bus route by ID
+ */
+export const updateBusRouteService = async (id: string, data: Partial<IBusRoute>) => {
+  const updatedRoute = await BusRouteModel.findByIdAndUpdate(id, data, {
+    new: true, // return updated document
+    runValidators: true, // validate schema before update
+  }).populate("bus");
+
+  return updatedRoute;
 };
 
 /**

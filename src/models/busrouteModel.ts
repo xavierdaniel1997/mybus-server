@@ -11,7 +11,7 @@ const GeoPointSchema = new Schema({
 
 const BusRouteSchema = new Schema<IBusRoute>(
   {
-    busId: { type: Schema.Types.ObjectId, ref: "Bus", required: true },
+    bus: { type: Schema.Types.ObjectId, ref: "Bus", required: true },
     routeName: { type: String, required: true },
     source: { type: GeoPointSchema, required: true },
     destination: { type: GeoPointSchema, required: true },

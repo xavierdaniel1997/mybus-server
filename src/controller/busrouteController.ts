@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createBusRouteService, updateBusRouteService } from "../service/routeService";
+import { createBusRouteService, getBusRouteById, updateBusRouteService } from "../service/routeService";
 
 const createRouteController  = async (req: Request, res: Response) => {
     try{
@@ -46,4 +46,17 @@ const updateRouteController = async (req: Request, res: Response) => {
   }
 };
 
-export {createRouteController, updateRouteController} 
+const getBusRouteByIdController = async (req: Request, res: Response) => {
+  try{
+    const {routeId} = req.params;
+    if(!routeId){
+      throw new Error("routeId not found")
+    }
+    const routeDetail = await getBusRouteById(routeId)
+    res.status(200).json({message: "Successfully fetch the routeDetails", data: routeDetail})
+  }catch(error){
+    res.status(400).json({message: "Failed to fetch the routeDetail", error})
+  }
+}
+
+export {createRouteController, updateRouteController, getBusRouteByIdController} 

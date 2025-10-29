@@ -5,6 +5,7 @@ import seatLayoutRoute from "./seatLayoutRoute";
 import busRoute from "./busRoute";
 import busrouteRoute from './busrouteRoute';
 import bustripScheduleRoute from './busTripScheduleRoute';
+import userRoute from "./userRoutes";
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use("/bustype", seatLayoutRoute);
 router.use("/mybus", busRoute);
 router.use("/myroute", busrouteRoute);
 router.use("/mytrips", bustripScheduleRoute);
+router.use("/users", userRoute);
 
 export default router;

@@ -13,8 +13,18 @@ const createBusScheduleController = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error creating trip" });
+    res.status(500).json({ message: "Error creating trip" , error});
   }
 };
 
-export {createBusScheduleController}
+
+
+const getScheduledTripsController = async (req: Request, res: Response) => {
+  try{
+    res.status(200).json({message: "successfully fetch the trip scheduled"})
+  }catch(error){
+    res.status(500).json({ message: "Failed to fetch the trip scheduled", error });
+  }
+}
+
+export {createBusScheduleController, getScheduledTripsController}

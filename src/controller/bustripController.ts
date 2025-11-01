@@ -1,5 +1,6 @@
 import {Request, Response} from "express";
 import { createBusSchedule } from "../service/busScheduleService";
+import { getScheduledTrip } from "../service/bustripService";
 
 
 const createBusScheduleController = async (req: Request, res: Response) => {
@@ -21,7 +22,12 @@ const createBusScheduleController = async (req: Request, res: Response) => {
 
 const getScheduledTripsController = async (req: Request, res: Response) => {
   try{
-    res.status(200).json({message: "successfully fetch the trip scheduled"})
+    const {scheduledId} = req.params;
+    if(!scheduledId){
+      throw new Error("scheduled _id is not found")
+    }
+    const scheduledTrip = await getScheduledTrip(scheduledId)
+    res.status(200).json({message: "successfully fetch the trip scheduled", data: scheduledTrip})
   }catch(error){
     res.status(500).json({ message: "Failed to fetch the trip scheduled", error });
   }

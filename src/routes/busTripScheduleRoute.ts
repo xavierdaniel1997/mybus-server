@@ -6,6 +6,6 @@ import { createBusScheduleController, getScheduledTripsController } from '../con
 const router = express.Router();
 
 router.post("/schedule-trip", isAuth, isAdmin, createBusScheduleController);
-router.get("/scheduled-trips", isAuth, isAdmin, getScheduledTripsController)          
+router.get("/scheduled-trips/:scheduledId", isAuth, isAdmin, getScheduledTripsController)          
 
 export default router;

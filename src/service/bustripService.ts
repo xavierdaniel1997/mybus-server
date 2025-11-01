@@ -48,6 +48,11 @@ export const createBusTrip = async (data: {
   });
 };
 
+
+export const getScheduledTrip = async (scheduledId: string) => {
+  return await BusScheduleModel.findById(scheduledId)
+}
+
 /** Create trips automatically between date range for a schedule */
 export const generateTripsForSchedule = async (scheduleId: string) => {
   const schedule = await BusScheduleModel.findById(scheduleId);
@@ -82,6 +87,8 @@ export const generateTripsForSchedule = async (scheduleId: string) => {
 
   return await Promise.all(tripsToCreate);
 };
+
+
 
 /** Fetch trips by route/date/status */
 export const getTrips = async (filters: {

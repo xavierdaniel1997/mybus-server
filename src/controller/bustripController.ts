@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import { createBusSchedule } from "../service/busScheduleService";
+import { createBusSchedule, updateBusSchedule } from "../service/busScheduleService";
 import { getScheduledTrip } from "../service/bustripService";
 
 
@@ -7,7 +7,7 @@ const createBusScheduleController = async (req: Request, res: Response) => {
   try {
      const data = req.body;
     const result = await createBusSchedule(data);
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       message: `Bus schedule created and ${result.tripsCreated} trips generated.`,
       schedule: result.schedule,
@@ -15,6 +15,33 @@ const createBusScheduleController = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error creating trip" , error});
+  }
+};
+
+
+
+const updateBusScheduleController = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; 
+    const data = req.body;
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Missing schedule ID" });
+    }
+
+    const updatedSchedule = await updateBusSchedule(id, data);
+
+    res.status(200).json({
+      success: true,
+      message: "Bus schedule updated successfully",
+      schedule: updatedSchedule,
+    });
+  } catch (error) {
+    console.error("Error updating schedule:", error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : "Error updating schedule",
+    });
   }
 };
 
@@ -33,4 +60,4 @@ const getScheduledTripsController = async (req: Request, res: Response) => {
   }
 }
 
-export {createBusScheduleController, getScheduledTripsController}
+export {createBusScheduleController, getScheduledTripsController, updateBusScheduleController}

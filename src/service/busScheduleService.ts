@@ -29,3 +29,29 @@ export const createBusSchedule = async (data: {
 
   return { schedule, tripsCreated: trips.length };
 };
+
+
+export const updateBusSchedule = async (
+  scheduleId: string,
+  data: Partial<{
+    bus: string;
+    route: string;
+    frequency: "daily" | "weekdays" | "custom";
+    departureTime: string;
+    arrivalTime: string;
+    basePrice: number;
+    startDate: string;
+    endDate?: string;
+    active: boolean;
+  }>
+) => {
+  const existingSchedule = await BusScheduleModel.findById(scheduleId);
+  if (!existingSchedule) {
+    throw new Error("Schedule not found");
+  }
+
+  Object.assign(existingSchedule, data);
+  await existingSchedule.save();
+
+  return existingSchedule;
+};

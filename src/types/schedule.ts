@@ -7,7 +7,8 @@ export interface IBusSchedule {
   departureTime: string;
   arrivalTime: string;
   basePrice: number;
-  startDate: Date;
+  customInterval?: number;
+  startDate?: Date;
   endDate?: Date;
   active: boolean;
 }

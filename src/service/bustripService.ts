@@ -62,28 +62,63 @@ export const generateTripsForSchedule = async (scheduleId: string) => {
   const endDate = schedule.endDate ? dayjs(schedule.endDate) : dayjs().add(30, "day"); // default next 30 days
   const tripsToCreate = [];
 
+  // while (currentDate.isBefore(endDate) || currentDate.isSame(endDate, "day")) {
+  //   const dayOfWeek = currentDate.day();
+
+  //   if (
+  //     schedule.frequency === "daily" ||
+  //     (schedule.frequency === "weekdays" && dayOfWeek >= 1 && dayOfWeek <= 5)
+  //   ) {
+  //     tripsToCreate.push(
+  //       createBusTrip({
+  //         busId: schedule.bus.toString(),
+  //         routeId: schedule.route.toString(),
+  //         scheduleId: schedule._id.toString(),
+  //         travelDate: currentDate.toISOString(),
+  //         departureTime: schedule.departureTime,
+  //         arrivalTime: schedule.arrivalTime,
+  //         basePrice: schedule.basePrice,
+  //       })
+  //     );
+  //   }
+
+  //   currentDate = currentDate.add(1, "day");
+  // }
+
   while (currentDate.isBefore(endDate) || currentDate.isSame(endDate, "day")) {
-    const dayOfWeek = currentDate.day();
+  const dayOfWeek = currentDate.day();
+  let shouldCreate = false;
 
-    if (
-      schedule.frequency === "daily" ||
-      (schedule.frequency === "weekdays" && dayOfWeek >= 1 && dayOfWeek <= 5)
-    ) {
-      tripsToCreate.push(
-        createBusTrip({
-          busId: schedule.bus.toString(),
-          routeId: schedule.route.toString(),
-          scheduleId: schedule._id.toString(),
-          travelDate: currentDate.toISOString(),
-          departureTime: schedule.departureTime,
-          arrivalTime: schedule.arrivalTime,
-          basePrice: schedule.basePrice,
-        })
-      );
-    }
+  if (schedule.frequency === "daily") {
+    shouldCreate = true;
+  } else if (schedule.frequency === "weekdays" && dayOfWeek >= 1 && dayOfWeek <= 5) {
+    shouldCreate = true;
+  } else if (schedule.frequency === "custom" && schedule.customInterval) {
+    shouldCreate = true;
+  }
 
+  if (shouldCreate) {
+    tripsToCreate.push(
+      createBusTrip({
+        busId: schedule.bus.toString(),
+        routeId: schedule.route.toString(),
+        scheduleId: schedule._id.toString(),
+        travelDate: currentDate.toISOString(),
+        departureTime: schedule.departureTime,
+        arrivalTime: schedule.arrivalTime,
+        basePrice: schedule.basePrice,
+      })
+    );
+  }
+
+  // advance based on frequency
+  if (schedule.frequency === "custom" && schedule.customInterval) {
+    currentDate = currentDate.add(schedule.customInterval, "day");
+  } else {
     currentDate = currentDate.add(1, "day");
   }
+}
+
 
   return await Promise.all(tripsToCreate);
 };

@@ -9,6 +9,7 @@ export const createBusSchedule = async (data: {
   departureTime: string;
   arrivalTime: string;
   basePrice: number;
+  customInterval: number;
   startDate: string;
   endDate?: string;
 }) => {
@@ -20,6 +21,7 @@ export const createBusSchedule = async (data: {
     departureTime: data.departureTime,
     arrivalTime: data.arrivalTime,
     basePrice: data.basePrice,
+    customInterval: data.customInterval,
     startDate: data.startDate,
     endDate: data.endDate,
   });
@@ -40,6 +42,7 @@ export const updateBusSchedule = async (
     departureTime: string;
     arrivalTime: string;
     basePrice: number;
+    customInterval: number;
     startDate: string;
     endDate?: string;
     active: boolean;

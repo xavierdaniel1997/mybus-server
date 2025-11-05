@@ -6,6 +6,7 @@ import busRoute from "./busRoute";
 import busrouteRoute from './busrouteRoute';
 import bustripScheduleRoute from './busTripScheduleRoute';
 import userRoute from "./userRoutes";
+import confirmBusRoute from "./confirmBusRoute";
 
 const router = express.Router();
 
@@ -16,5 +17,6 @@ router.use("/mybus", busRoute);
 router.use("/myroute", busrouteRoute);
 router.use("/mytrips", bustripScheduleRoute);
 router.use("/users", userRoute);
+router.use("/admin-mybus", confirmBusRoute);
 
 export default router;

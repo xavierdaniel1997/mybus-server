@@ -1,5 +1,7 @@
+import { scheduler } from "timers/promises";
 import BusScheduleModel from "../models/busScheduleModel";
 import { generateTripsForSchedule } from "./bustripService";
+import BusTripModel from "../models/bustripModel";
 
 
 export const createBusSchedule = async (data: {
@@ -57,4 +59,35 @@ export const updateBusSchedule = async (
   await existingSchedule.save();
 
   return existingSchedule;
+};
+
+
+
+export const getBusDetailComplete = async (scheduleId: string) => {
+
+  const schedule = await BusScheduleModel.findById(scheduleId)
+    .populate({
+      path: "bus",
+      select: "name registrationNo brand busType layoutName lowerDeck upperDeck features images",
+    })
+    .populate({
+      path: "route",
+      select: "routeName source destination boardingPoints droppingPoints distance duration",
+    })
+    .lean(); 
+
+  if (!schedule) {
+    throw new Error("Schedule not found");
+  }
+
+  const trips = await BusTripModel.find({ schedule: scheduleId })
+    .select("travelDate seatPricing status basePrice departureTime arrivalTime")
+    .lean();
+
+  return {
+    bus: schedule.bus,
+    route: schedule.route,
+    schedule,
+    trips,
+  };
 };

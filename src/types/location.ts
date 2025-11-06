@@ -9,8 +9,8 @@ export interface ILocation {
   city: String;
   state: String;
   stationCode: string;
-  latitude: Number;
-  longitude: Number;
+  latitude: string;
+  longitude: string;
   locationImage: string;
   status: ILocationStatus;
 }

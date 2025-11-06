@@ -25,16 +25,37 @@ export const createBusTrip = async (data: {
   if (!route) throw new Error("Route not found");
 
   // flatten lower + upper deck seats
-  const allSeats = [
-    ...(bus.lowerDeck?.seats?.flat() || []),
-    ...(bus.upperDeck?.seats?.flat() || []),
-  ];
 
-  const seatPricing = allSeats.map((seat) => ({
+  // const allSeats = [
+  //   ...(bus.lowerDeck?.seats?.flat() || []),
+  //   ...(bus.upperDeck?.seats?.flat() || []),
+  // ];
+
+  // const seatPricing = allSeats.map((seat) => ({
+  //   seatId: seat.id,
+  //   price: seat.price || basePrice,
+  //   isAvailable: seat.isAvailable,
+  // }));
+
+  const allSeats = [
+  ...(bus.lowerDeck?.seats?.flat() || []),
+  ...(bus.upperDeck?.seats?.flat() || []),
+];
+
+const seatPricing = allSeats.map((seat) => {
+  let finalPrice = basePrice;
+
+  if (seat.price && typeof seat.price === "number") {
+    finalPrice = seat.price;
+  }
+
+  return {
     seatId: seat.id,
-    price: seat.price || basePrice,
-    isAvailable: seat.isAvailable,
-  }));
+    seatNumber: seat.seatNumber || seat.id, 
+    price: finalPrice,
+    isAvailable: true,
+  };
+});
 
   return await BusTripModel.create({
     bus: busId,

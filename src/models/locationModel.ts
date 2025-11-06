@@ -25,11 +25,11 @@ const locationSchema: Schema = new Schema<ILocation>(
       uppercase: true,
     },
     latitude: {
-      type: Number,
+      type: String,
       required: true,
     },
     longitude: {
-      type: Number,
+      type: String,
       required: true,
     },
     locationImage: {

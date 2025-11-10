@@ -1,6 +1,6 @@
 import {Request, Response} from "express";
 import { createBusSchedule, updateBusSchedule } from "../service/busScheduleService";
-import { getScheduledTrip } from "../service/bustripService";
+import { getScheduledTrip, searchTrips, verifyTripScheduled } from "../service/bustripService";
 
 
 const createBusScheduleController = async (req: Request, res: Response) => {
@@ -60,4 +60,54 @@ const getScheduledTripsController = async (req: Request, res: Response) => {
   }
 }
 
-export {createBusScheduleController, getScheduledTripsController, updateBusScheduleController}
+
+const verifyTripsForSchedule = async (req: Request, res: Response) => {
+  try {
+    const { scheduleId } = req.params;
+    if (!scheduleId) return res.status(400).json({ message: "scheduleId required" });
+
+
+    const result = await verifyTripScheduled(scheduleId)
+
+    return res.status(200).json({
+      success: true,
+      message: `Marked ${result.modifiedCount || 0} trips as verified.`,
+      result,
+    });
+  } catch (error) {
+    console.error("verifyTripsForSchedule error:", error);
+    res.status(500).json({ message: "Failed to update the trip" });
+  }
+};
+
+
+const searchTripController = async (req: Request, res: Response) => {
+  try{
+    console.log("frm the searchTripController", req.query)
+const { from, to, date, seatType } = req.query;
+
+    if (!from || !to || !date) {
+      return res.status(400).json({ message: "Missing required fields: from, to, or date" });
+    }
+      const trips = await searchTrips(
+      from as string,
+      to as string,
+      date as string,
+      seatType as string
+    );
+
+    if (!trips.length) {
+      return res.status(404).json({ message: "No trips found for this search." });
+    }
+
+    res.status(200).json({
+      message: "Trips fetched successfully",
+      count: trips.length,
+      data: trips,
+    });
+  }catch(error: any){
+    res.status(400).json({message: "Failed to fetch the trip details", error})
+  }
+}
+
+export {createBusScheduleController, getScheduledTripsController, updateBusScheduleController, verifyTripsForSchedule, searchTripController}

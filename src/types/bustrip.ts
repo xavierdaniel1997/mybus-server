@@ -16,4 +16,5 @@ export interface IBusTrip {
   basePrice: number;
   seatPricing: ISeatPricing[];
   status: "scheduled" | "cancelled" | "completed";
+  verifiedTrip: boolean;
 }

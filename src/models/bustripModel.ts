@@ -22,9 +22,12 @@ const BusTripSchema = new Schema<IBusTrip>(
       enum: ["scheduled", "cancelled", "completed"],
       default: "scheduled",
     },
+    verifiedTrip: {type: Boolean, default: false}
   },
   { timestamps: true }
 );
+
+// BusTripSchema.index({ travelDate: 1 }, { expireAfterSeconds: 86400 });
 
 const BusTripModel = mongoose.model<IBusTrip>("BusTrip", BusTripSchema);
 export default BusTripModel;

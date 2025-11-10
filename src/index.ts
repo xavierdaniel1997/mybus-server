@@ -11,6 +11,8 @@ const app : Application = express();
 const PORT: Number = 8000;
 
 dotenv.config()
+
+
 connectDB()
 
 const allowedOrigin = process.env.CLIENT_ORIGIN;

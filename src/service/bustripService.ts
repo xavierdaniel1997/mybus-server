@@ -1,9 +1,10 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import dayjs from "dayjs";
 import { getBusDetail } from "./busService";
 import { getBusRouteById } from "./routeService";
 import BusTripModel from "../models/bustripModel";
 import BusScheduleModel from "../models/busScheduleModel";
+import BusRouteModel from "../models/busrouteModel";
 
 
 /** Create a single trip */
@@ -24,18 +25,6 @@ export const createBusTrip = async (data: {
   const route = await getBusRouteById(routeId);
   if (!route) throw new Error("Route not found");
 
-  // flatten lower + upper deck seats
-
-  // const allSeats = [
-  //   ...(bus.lowerDeck?.seats?.flat() || []),
-  //   ...(bus.upperDeck?.seats?.flat() || []),
-  // ];
-
-  // const seatPricing = allSeats.map((seat) => ({
-  //   seatId: seat.id,
-  //   price: seat.price || basePrice,
-  //   isAvailable: seat.isAvailable,
-  // }));
 
   const allSeats = [
   ...(bus.lowerDeck?.seats?.flat() || []),
@@ -79,7 +68,18 @@ export const generateTripsForSchedule = async (scheduleId: string) => {
   const schedule = await BusScheduleModel.findById(scheduleId);
   if (!schedule) throw new Error("Schedule not found");
 
-  let currentDate = dayjs(schedule.startDate);
+
+   const todayStart = dayjs().startOf("day").toDate();
+  await BusTripModel.deleteMany({
+    schedule: schedule._id,
+    travelDate: { $lt: todayStart },
+  });
+
+  // let currentDate = dayjs(schedule.startDate);
+
+   let currentDate = dayjs(schedule.startDate);
+  if (currentDate.isBefore(dayjs(), "day")) currentDate = dayjs();
+
   const endDate = schedule.endDate ? dayjs(schedule.endDate) : dayjs().add(30, "day"); // default next 30 days
   const tripsToCreate = [];
 
@@ -146,4 +146,119 @@ export const getTrips = async (filters: {
   return await BusTripModel.find(query)
     .populate("bus", "name brand busType layoutName")
     .populate("route", "routeName source destination distance duration");
+};
+
+
+export const verifyTripScheduled = async (scheduleId: string) => {
+ return await BusTripModel.updateMany(
+      { schedule: scheduleId },
+      { $set: { verifiedTrip: true } }
+    );
+}
+
+
+
+export const searchTrips = async (from: string, to: string, date: string, seatType?: string) => {
+
+  const travelDate = new Date(date);
+
+  const routes = await BusRouteModel.find(
+    {
+      $and: [
+        { "source.name": { $regex: new RegExp(from, "i") } },
+        { "destination.name": { $regex: new RegExp(to, "i") } },
+      ],
+    },
+    { _id: 1 } // only fetch IDs
+  ).lean();
+
+  if (!routes.length) return [];
+
+  const routeIds = routes.map((r) => new Types.ObjectId(r._id));
+
+  // ✅ Step 3: Build efficient match query
+  const tripMatch: any = {
+    route: { $in: routeIds },
+    travelDate,
+    status: "scheduled",
+    verifiedTrip: true,
+  };
+
+  // ✅ Step 4: Aggregation pipeline for efficiency
+  const pipeline: any[] = [
+    { $match: tripMatch },
+
+    // Join with Bus collection
+    {
+      $lookup: {
+        from: "buses",
+        localField: "bus",
+        foreignField: "_id",
+        as: "bus",
+      },
+    },
+    { $unwind: "$bus" },
+
+    // Optional seat type filter (filtering after join)
+    ...(seatType
+      ? [{ $match: { "bus.busType": seatType } }]
+      : []),
+
+    // Join with BusRoute
+    {
+      $lookup: {
+        from: "busroutes",
+        localField: "route",
+        foreignField: "_id",
+        as: "route",
+      },
+    },
+    { $unwind: "$route" },
+
+    // Join with BusSchedule
+    {
+      $lookup: {
+        from: "busschedules",
+        localField: "schedule",
+        foreignField: "_id",
+        as: "schedule",
+      },
+    },
+    { $unwind: { path: "$schedule", preserveNullAndEmptyArrays: true } },
+
+    // Select only needed fields
+    {
+      $project: {
+        _id: 1,
+        travelDate: 1,
+        departureTime: 1,
+        arrivalTime: 1,
+        basePrice: 1,
+        seatPricing: 1,
+        "bus._id": 1,
+        "bus.name": 1,
+        "bus.brand": 1,
+        "bus.busType": 1,
+        "bus.features": 1,
+        "bus.images": 1,
+        "route._id": 1,
+        "route.routeName": 1,
+        "route.routeDescription": 1,
+        "route.source": 1,
+        "route.destination": 1,
+        "route.distance": 1,
+        "route.duration": 1,
+        "schedule._id": 1,
+        "schedule.departureTime": 1,
+        "schedule.arrivalTime": 1,
+        "schedule.basePrice": 1,
+      },
+    },
+    { $sort: { "schedule.departureTime": 1 } },
+  ];
+
+  // ✅ Step 5: Execute aggregation (optimized)
+  const trips = await BusTripModel.aggregate(pipeline).allowDiskUse(true);
+
+  return trips;
 };

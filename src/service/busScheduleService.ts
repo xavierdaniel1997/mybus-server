@@ -72,7 +72,7 @@ export const getBusDetailComplete = async (scheduleId: string) => {
     })
     .populate({
       path: "route",
-      select: "routeName source destination boardingPoints droppingPoints distance duration",
+      select: "routeName routeDescription source destination boardingPoints droppingPoints distance duration",
     })
     .lean(); 
 

@@ -1,6 +1,6 @@
 import {Request, Response} from "express";
 import { createBusSchedule, updateBusSchedule } from "../service/busScheduleService";
-import { getScheduledTrip, searchTrips, verifyTripScheduled } from "../service/bustripService";
+import { getScheduledTrip, getTripByIdService, searchTrips, verifyTripScheduled } from "../service/bustripService";
 
 
 const createBusScheduleController = async (req: Request, res: Response) => {
@@ -83,7 +83,6 @@ const verifyTripsForSchedule = async (req: Request, res: Response) => {
 
 const searchTripController = async (req: Request, res: Response) => {
   try{
-    console.log("frm the searchTripController", req.query)
 const { from, to, date, seatType } = req.query;
 
     if (!from || !to || !date) {
@@ -110,4 +109,27 @@ const { from, to, date, seatType } = req.query;
   }
 }
 
-export {createBusScheduleController, getScheduledTripsController, updateBusScheduleController, verifyTripsForSchedule, searchTripController}
+
+const getBusTripById = async (req: Request, res: Response) => {
+   try {
+    const { tripId } = req.params;
+    if(!tripId){
+      throw new Error("tripId not found")
+    }
+    const trip = await getTripByIdService(tripId);
+
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    res.status(200).json(trip);
+  } catch (error: any) {
+    console.error("Error fetching trip details:", error);
+    res.status(500).json({
+      message: "Failed to fetch trip details",
+      error: error.message,
+    });
+  }
+}
+
+export {createBusScheduleController, getScheduledTripsController, updateBusScheduleController, verifyTripsForSchedule, searchTripController, getBusTripById}

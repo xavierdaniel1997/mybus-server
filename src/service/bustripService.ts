@@ -239,6 +239,8 @@ export const searchTrips = async (from: string, to: string, date: string, seatTy
         "bus.name": 1,
         "bus.brand": 1,
         "bus.busType": 1,
+        "bus.layoutName": 1,
+        "bus.information": 1,
         "bus.features": 1,
         "bus.images": 1,
         "route._id": 1,
@@ -262,3 +264,8 @@ export const searchTrips = async (from: string, to: string, date: string, seatTy
 
   return trips;
 };
+
+
+export const getTripByIdService = async (tripId: string) => {
+  return await BusTripModel.findById(tripId)
+}

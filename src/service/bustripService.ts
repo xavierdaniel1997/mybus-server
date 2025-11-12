@@ -162,15 +162,36 @@ export const searchTrips = async (from: string, to: string, date: string, seatTy
 
   const travelDate = new Date(date);
 
+  // const routes = await BusRouteModel.find(
+  //   {
+  //     $and: [
+  //       { "source.name": { $regex: new RegExp(from, "i") } },
+  //       { "destination.name": { $regex: new RegExp(to, "i") } },
+  //     ],
+  //   },
+  //   { _id: 1 }
+  // ).lean();
+
   const routes = await BusRouteModel.find(
-    {
-      $and: [
-        { "source.name": { $regex: new RegExp(from, "i") } },
-        { "destination.name": { $regex: new RegExp(to, "i") } },
-      ],
-    },
-    { _id: 1 } // only fetch IDs
-  ).lean();
+  {
+    $and: [
+      {
+        $or: [
+          { "source.name": { $regex: new RegExp(from, "i") } },
+          { "boardingPoints.name": { $regex: new RegExp(from, "i") } },
+        ],
+      },
+      {
+        $or: [
+          { "destination.name": { $regex: new RegExp(to, "i") } },
+          { "droppingPoints.name": { $regex: new RegExp(to, "i") } },
+        ],
+      },
+    ],
+  },
+  { _id: 1 }
+).lean();
+
 
   if (!routes.length) return [];
 
@@ -201,7 +222,7 @@ export const searchTrips = async (from: string, to: string, date: string, seatTy
 
     // Optional seat type filter (filtering after join)
     ...(seatType
-      ? [{ $match: { "bus.busType": seatType } }]
+      ? [{ $match: { "bus.busType": {$regex:  `^${seatType}$`, $options: "i",} } }]
       : []),
 
     // Join with BusRoute
@@ -267,5 +288,5 @@ export const searchTrips = async (from: string, to: string, date: string, seatTy
 
 
 export const getTripByIdService = async (tripId: string) => {
-  return await BusTripModel.findById(tripId)
+  return await BusTripModel.findById(tripId).populate("bus").populate("route")
 }

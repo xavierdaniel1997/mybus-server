@@ -5,6 +5,8 @@ const SeatPricingSchema = new Schema<ISeatPricing>({
   seatId: { type: String, required: true },
   price: { type: Number, required: true },
   isAvailable: { type: Boolean, default: true },
+  reservedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+  reservedUntil: { type: Date, default: null },
 });
 
 const BusTripSchema = new Schema<IBusTrip>(
@@ -26,8 +28,6 @@ const BusTripSchema = new Schema<IBusTrip>(
   },
   { timestamps: true }
 );
-
-// BusTripSchema.index({ travelDate: 1 }, { expireAfterSeconds: 86400 });
 
 const BusTripModel = mongoose.model<IBusTrip>("BusTrip", BusTripSchema);
 export default BusTripModel;

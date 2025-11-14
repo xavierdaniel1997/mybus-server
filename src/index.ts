@@ -2,6 +2,8 @@ import express, {Request, Response, Application} from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import bodyParser from "body-parser";
+import webhookRouter from "./routes/webhook";
 
 import connectDB from './config/connectDB';
 import apiRoute from './routes/apiRoute';
@@ -29,6 +31,13 @@ app.use("/api", apiRoute)
 app.get("/", (req: Request, res: Response) => {
     res.json({message: "test message form the mybus server"})
 })
+
+// For webhook: save raw body on request so we can verify signature
+app.post("/api/webhooks/razorpay", bodyParser.raw({ type: "*/*" }), (req, res, next) => {
+  (req as any).rawBody = req.body;
+  // delegate to handler in webhook router
+  webhookRouter(req, res, next);
+});
 
 app.listen(PORT, () => {
     console.log(`Server starts running at PORT ${PORT}`)

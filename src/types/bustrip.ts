@@ -4,6 +4,8 @@ export interface ISeatPricing {
   seatId: string; 
   price: number;
   isAvailable: boolean;
+  reservedBy?: Types.ObjectId;
+  reservedUntil?: Date;
 }
 
 export interface IBusTrip {

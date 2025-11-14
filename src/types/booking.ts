@@ -1,18 +1,30 @@
 import { Types } from "mongoose";
 
+export interface IPassenger {
+  name: string;
+  age: number;
+  gender: "M" | "F" | "O";
+  seatId: string;
+}
+
+export interface IPayment {
+  gateway: "razorpay";
+  gatewayOrderId?: string;
+  gatewayPaymentId?: string;
+  status: "initiated" | "authorized" | "captured" | "failed" | "refunded";
+  raw?: any;
+}
+
 export interface IBooking {
-  _id?: Types.ObjectId;
-  trip: Types.ObjectId; 
-  user: Types.ObjectId; 
+  trip: Types.ObjectId;
+  user: Types.ObjectId;
   seatIds: string[];
+  passengers: IPassenger[];
   totalAmount: number;
-  payment: {
-    gateway: string;
-    paymentIntentId?: string;
-    status: string;
-    raw?: any;
-  };
-  status: "confirmed" | "cancelled" | "refunded";
-  createdAt?: Date;
-  updatedAt?: Date;
+
+  status: "pending" | "confirmed" | "cancelled" | "expired";
+
+  reservationExpiresAt: Date;
+
+  payment: IPayment;
 }

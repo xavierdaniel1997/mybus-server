@@ -15,16 +15,26 @@ export interface IPayment {
   raw?: any;
 }
 
+export interface IContactDetails {
+  phoneCode: string;
+  phone: string;
+  email: string;
+  state: string;
+  whatsappEnabled: boolean;
+}
+
+
 export interface IBooking {
   trip: Types.ObjectId;
   user: Types.ObjectId;
   seatIds: string[];
   passengers: IPassenger[];
+  contact: IContactDetails;
   totalAmount: number;
 
   status: "pending" | "confirmed" | "cancelled" | "expired";
 
-  reservationExpiresAt: Date;
+  reservationUntil: Date;
 
   payment: IPayment;
 }

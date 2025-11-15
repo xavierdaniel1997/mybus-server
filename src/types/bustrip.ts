@@ -3,16 +3,17 @@ import { Types} from "mongoose";
 export interface ISeatPricing {
   seatId: string; 
   price: number;
-  isAvailable: boolean;
-  reservedBy?: Types.ObjectId;
-  reservedUntil?: Date;
+  isBooked: boolean;
+  // isAvailable: boolean;
+  // reservedBy?: Types.ObjectId;
+  // reservedUntil?: Date;
 }
 
 export interface IBusTrip {
   bus: Types.ObjectId;
   route: Types.ObjectId;
   schedule: Types.ObjectId;
-  travelDate: Date;
+  travelDate: Date;    
   departureTime: string;
   arrivalTime: string;
   basePrice: number;

@@ -4,9 +4,18 @@ import { IBooking } from "../types/booking";
 const PassengerSchema = new Schema({
   name: { type: String, required: true },
   age: { type: Number, required: true },
-  gender: { type: String, enum: ["M", "F", "O"], required: true },
+  gender: { type: String, enum: ["Male", "Female"], required: true },
   seatId: { type: String, required: true }
 });
+
+const ContactSchema = new Schema({
+  phoneCode: { type: String, required: true },
+  phone: { type: String, required: true },
+  email: { type: String, required: true },
+  state: { type: String, required: true },
+  whatsappEnabled: { type: Boolean, default: true }
+});
+
 
 const PaymentSchema = new Schema({
   gateway: { type: String, default: "razorpay" },
@@ -29,6 +38,8 @@ const BookingSchema = new Schema<IBooking>(
 
     passengers: { type: [PassengerSchema], default: [] },
 
+    contact: { type: ContactSchema, required: true },
+
     totalAmount: { type: Number, required: true },
 
     status: {
@@ -37,14 +48,13 @@ const BookingSchema = new Schema<IBooking>(
       default: "pending"
     },
 
-    reservationExpiresAt: { type: Date, required: true },
-
-    payment: { type: PaymentSchema, required: true }
+    payment: { type: PaymentSchema, required: true },
+    reservationUntil: { type: Date },
   },
   { timestamps: true }
 );
 
-
+BookingSchema.index({ reservationUntil: 1 }, { expireAfterSeconds: 0 });
 
 const BookingModel = mongoose.model<IBooking>("booking", BookingSchema);
 export default BookingModel;

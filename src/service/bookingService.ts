@@ -4,102 +4,57 @@ import BusTripModel from "../models/bustripModel";
 import BookingModel from "../models/bookingModel";
 import { createRazorpayOrder } from "./paymentService";
 import { Types } from "mongoose";
+import SeatReservationModal from "../models/seatReservationModel";
 
-const RESERVATION_MINUTES = 10;
 
-export const initiateBooking = async ({
-  tripId,
-  seatIds,
-  userId
-}: {
-  tripId: string;
-  seatIds: string[];
-  userId: string;
-}) => {
+export const holdSeats = async (tripId: string, seatIds: string[], userId: string): Promise<{ expiresAt: Date }> => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const reservationUntil = new Date(Date.now() + RESERVATION_MINUTES * 60 * 1000);
+    const trip = await BusTripModel.findById(tripId).session(session);
+    if (!trip) throw new Error("Trip not found");
 
-    // 1) Re-check availability atomically and mark seats reserved using arrayFilters
-    const updateResult = await BusTripModel.updateOne(
-      {
-        _id: tripId,
-        // ensure all requested seats exist AND are currently available
-        "seatPricing.seatId": { $in: seatIds }
-      },
-      {
-        $set: {
-          "seatPricing.$[elem].isAvailable": false,
-          "seatPricing.$[elem].reservedBy": new Types.ObjectId(userId),
-          "seatPricing.$[elem].reservedUntil": reservationUntil
-        }
-      },
-      {
-        arrayFilters: [{ "elem.seatId": { $in: seatIds }, "elem.isAvailable": true }],
-        session
-      }
-    );
-
-    // Note: updateResult.nModified does not necessarily equal number of seats updated when arrayFilters sets multiple elements.
-    // Safer approach: re-read the document in the transaction and verify reserved seats count.
-
-    const tripAfter = await BusTripModel.findById(tripId).session(session);
-    if (!tripAfter) throw new Error("Trip not found after update");
-
-    // Count how many of seatIds are now marked reserved by this user
-    const reservedCount = tripAfter.seatPricing.filter(
-      s => seatIds.includes(s.seatId) && !s.isAvailable && s.reservedBy?.toString() === userId
-    ).length;
-
-    if (reservedCount !== seatIds.length) {
-      // some seats were not reserved (someone else got them). rollback.
-      throw new Error("Some seats are no longer available");
-    }
-
-    // 2) Create pending booking
-    const totalAmount = seatIds.reduce((acc, seat) => {
-      const seatObj = tripAfter.seatPricing.find(s => s.seatId === seat);
-      return acc + (seatObj ? seatObj.price ?? tripAfter.basePrice : tripAfter.basePrice);
-    }, 0);
-
-    const [booking] = await BookingModel.create(
-      [
-        {
-          trip: tripId,
-          user: userId,
-          seatIds,
-          totalAmount,
-          status: "pending",
-          reservationExpiresAt: reservationUntil,
-          payment: {
-            gateway: "razorpay",
-            status: "initiated"
-          }
-        }
-      ],
-      { session }
-    );
-    if(!booking){
-        throw new Error("Booking from the initiale booking is not found")
-    }
-
-    // 3) Create razorpay order
-    const razorpayOrder = await createRazorpayOrder({
-      bookingId: booking._id.toString(),
-      amount: totalAmount
+    const seatMap: Record<string, any> = {};
+    trip.seatPricing.forEach((s: any) => {
+      seatMap[s.seatId] = s;
     });
 
-    // attach order to booking (store raw order)
-    booking.payment.gatewayOrderId = razorpayOrder.id;
-    booking.payment.raw = razorpayOrder;
-    await booking.save({ session });
+
+
+    // 1. Check permanently booked seats
+    for (const seat of seatIds) {
+      if (!seatMap[seat]) throw new Error(`Invalid seat ${seat}`);
+      if (seatMap[seat].isBooked) throw new Error(`Seat already booked ${seat}`);
+    }
+
+    // 2. Check active reservations
+    const existingHolds = await SeatReservationModal.find({
+      tripId,
+      seatId: { $in: seatIds },
+      expiresAt: { $gt: new Date() }
+    }).session(session);
+
+    if (existingHolds.length > 0) {
+      throw new Error("Some seats already reserved");
+    }
+
+    // 3. Create TTL reservation
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    await SeatReservationModal.insertMany(
+      seatIds.map(seat => ({
+        tripId,
+        seatId: seat,   
+        userId,
+        expiresAt
+      })),
+      { session }
+    );
 
     await session.commitTransaction();
+    return { expiresAt };
 
-    // Ideally push a delayed job to release seats at reservationUntil
-    return { booking, razorpayOrder };
   } catch (err) {
     await session.abortTransaction();
     throw err;
@@ -107,3 +62,71 @@ export const initiateBooking = async ({
     session.endSession();
   }
 };
+
+
+
+
+
+export type InitiateBookingParams = {
+  tripId: string;
+  seatIds: string[];
+  userId: string;
+  passengers: Array<{ price?: number; [key: string]: any }>;
+  contact?: { [key: string]: any } | null;
+};
+
+export const initiateBooking = async ({
+  tripId,
+  seatIds,   
+  userId,
+  passengers,
+  contact
+}: InitiateBookingParams) => {  
+  // 1) Create seat hold (TTL)
+  const { expiresAt } = await holdSeats(tripId, seatIds, userId);
+
+
+    const trip = await BusTripModel.findById(tripId);
+  if (!trip) throw new Error("Trip not found");
+
+  const seatMap: Record<string, number> = {};
+  trip.seatPricing.forEach((s) => {
+    seatMap[s.seatId] = s.price;
+  });
+
+  // 3. Compute amount ONLY from backend pricing
+  const totalAmount = seatIds.reduce((acc, seatId) => {
+    return acc + (seatMap[seatId] || 0);
+  }, 0);
+
+  if (totalAmount <= 0) {
+    throw new Error("Invalid seat pricing – total amount is zero");
+  }
+
+
+  // 3) Create booking in pending state
+  const booking = await BookingModel.create({
+    trip: tripId,
+    user: userId,
+    seatIds,
+    passengers,
+    contact,
+    totalAmount,
+    status: "pending",
+    reservationUntil: expiresAt,
+    payment: { status: "initiated" }
+  });
+
+  // 4) Create Razorpay order
+  const razorpayOrder = await createRazorpayOrder({
+    bookingId: booking._id.toString(),
+    amount: totalAmount * 100,
+  });
+
+  booking.payment.gatewayOrderId = razorpayOrder.id;
+  booking.payment.raw = razorpayOrder;
+  await booking.save();
+
+  return { booking, razorpayOrder };
+};
+

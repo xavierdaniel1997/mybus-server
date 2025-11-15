@@ -4,9 +4,10 @@ import { IBusTrip, ISeatPricing } from "../types/bustrip";
 const SeatPricingSchema = new Schema<ISeatPricing>({
   seatId: { type: String, required: true },
   price: { type: Number, required: true },
-  isAvailable: { type: Boolean, default: true },
-  reservedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
-  reservedUntil: { type: Date, default: null },
+  isBooked: { type: Boolean, default: false },
+  // isAvailable: { type: Boolean, default: true },
+  // reservedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+  // reservedUntil: { type: Date, default: null },
 });
 
 const BusTripSchema = new Schema<IBusTrip>(
@@ -25,7 +26,7 @@ const BusTripSchema = new Schema<IBusTrip>(
       default: "scheduled",
     },
     verifiedTrip: {type: Boolean, default: false}
-  },
+  },    
   { timestamps: true }
 );
 

@@ -4,7 +4,7 @@ import { isAdmin, isAuth } from '../middleware/isAuth';
 
 const router = express.Router();
 
-router.post("/reserve", isAuth, isAdmin, reserveBooking);
+router.post("/reserve", isAuth, reserveBooking);
              
 
 

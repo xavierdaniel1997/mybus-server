@@ -54,7 +54,6 @@ const BookingSchema = new Schema<IBooking>(
   { timestamps: true }
 );
 
-BookingSchema.index({ reservationUntil: 1 }, { expireAfterSeconds: 0 });
 
-const BookingModel = mongoose.model<IBooking>("booking", BookingSchema);
+const BookingModel = mongoose.model<IBooking>("Booking", BookingSchema);
 export default BookingModel;

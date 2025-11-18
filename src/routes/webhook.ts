@@ -2,73 +2,39 @@
 import express from "express";
 import crypto from "crypto";
 import BookingModel from "../models/bookingModel";
+import BusTripModel from "../models/bustripModel";
+import SeatReservationModal from "../models/seatReservationModel";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
-router.post("/razorpay", async (req, res) => {
-  const sig = req.headers["x-razorpay-signature"] as string | undefined;
-  const secret = process.env.RAZORPAY_SECRET!;
-  const rawBody = (req as any).rawBody;
+router.post("/razorpay", express.raw({ type: "*/*" }), async (req, res) => {
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET!; // set this in Razorpay webhook config
+  const signature = req.header("x-razorpay-signature") || "";
 
-  if (!sig || !rawBody) {
-    return res.status(400).send("Missing signature/body");
+  const generated = crypto.createHmac("sha256", secret).update(req.body).digest("hex");
+  if (generated !== signature) {
+    return res.status(400).send("Invalid webhook signature");
   }
 
-  const generated = crypto
-    .createHmac("sha256", secret)
-    .update(rawBody)
-    .digest("hex");
-
-  if (generated !== sig) {
-    return res.status(400).send("Invalid signature");
-  }
-
-  let event: any;
-  try {
-    const raw = Buffer.isBuffer(rawBody) ? rawBody.toString() : rawBody;
-    event = JSON.parse(raw);
-  } catch (err) {
-    console.error("Cannot parse webhook JSON", err);
-    return res.status(400).send("Bad JSON");
-  }
+  const payload = JSON.parse(req.body.toString());
+  const event = payload.event;
 
   try {
-    const paymentEntity = event.payload?.payment?.entity || null;
-    const orderEntity = event.payload?.order?.entity || null;
+    if (event === "payment.captured") {
+      const payment = payload.payload.payment.entity;
+      // payment.order_id and payment.notes or payment.receipt (receipt set to bookingId in create order)
+      const bookingId = payment.receipt || payment.notes?.bookingId;
+      // proceed same as verify: open transaction and mark seats+booking
 
-    const razorpayPaymentId = paymentEntity?.id || null;
-    const razorpayOrderId = paymentEntity?.order_id || orderEntity?.id || null;
-
-    if (!razorpayOrderId) {
-      console.warn("Webhook missing order id");
-      return res.status(200).send("ignored");
+      // implement same logic as verify endpoint, but ensure idempotency
+      // ...
     }
-
-    const booking = await BookingModel.findOne({
-      "payment.gatewayOrderId": razorpayOrderId
-    });
-
-    if (!booking) {
-      console.warn("Booking not found for order:", razorpayOrderId);
-      return res.status(200).send("no booking");
-    }
-
-    // idempotency
-    if (booking.status === "confirmed") {
-      return res.status(200).send("already processed");
-    }
-
-    booking.status = "confirmed";
-    (booking.payment as any).status = "captured";
-    booking.payment.gatewayPaymentId = razorpayPaymentId;
-    booking.payment.raw = event;
-
-    await booking.save();
-
-    return res.status(200).send("ok");
+    // handle payment.failed -> mark booking failed/expired etc.
+    res.json({ status: "ok" });
   } catch (err) {
-    console.error(err);
-    return res.status(500).send("error");
+    console.error("Webhook processing error", err);
+    res.status(500).send("error");
   }
 });
 

@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
-import { initiateBooking } from "../service/bookingService";
+import { getMyBookings, initiateBooking } from "../service/bookingService";
+import crypto from "crypto";
+import BookingModel from "../models/bookingModel";
+import BusTripModel from "../models/bustripModel";
+import SeatReservationModal from "../models/seatReservationModel";
+import mongoose from "mongoose";
 
 const reserveBooking = async (req: Request, res: Response) => {
   try {
@@ -69,6 +74,7 @@ const reserveBooking = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       booking,
+      bookingId: booking._id,
       razorpayOrder,
       message: "Successfully reserve the ticket",
     });
@@ -82,4 +88,76 @@ const reserveBooking = async (req: Request, res: Response) => {
   }
 };
 
-export { reserveBooking };
+
+
+
+const verifyPaymentAndConifrmSeat = async (req: Request, res: Response) => {
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      bookingId,
+      tripId,
+      seatIds
+    } = req.body;
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_SECRET!)
+      .update(body)
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ success: false, message: "Invalid signature" });
+    }
+
+    // 1. Update booking
+    await BookingModel.findByIdAndUpdate(bookingId, {
+      $set: {
+        "payment.status": "captured",
+        "payment.gatewayPaymentId": razorpay_payment_id,
+        "payment.raw.payment_id": razorpay_payment_id,
+        status: "confirmed",
+      },
+    });
+
+    // 2. Mark seats as booked
+    await BusTripModel.updateOne(
+      { _id: tripId },
+      {
+        $set: {
+          "seatPricing.$[elem].isBooked": true,
+        },
+      },
+      {
+        arrayFilters: [{ "elem.seatId": { $in: seatIds } }],
+      }
+    );
+
+    // 3. Remove hold reservations
+    await SeatReservationModal.deleteMany({
+      tripId,
+      seatId: { $in: seatIds },
+    });
+
+    return res.status(200).json({ success: true, message: "Payment verified, booking confirmed" });
+  } catch (err: any) {
+    console.error("Payment Verification Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+const getBookingController = async (req: Request, res: Response) => {
+  try{
+    const userId = req.user._id;
+    const mybookings = await getMyBookings(userId);
+    res.status(200).json({message: "Successfully fetch the booking details", data: mybookings})
+  }catch(error: any){
+    res.status(400).json({message: "Failed to fetch the booking details"})
+  }
+}
+
+export { reserveBooking, verifyPaymentAndConifrmSeat, getBookingController};

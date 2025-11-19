@@ -5,7 +5,7 @@ const PassengerSchema = new Schema({
   name: { type: String, required: true },
   age: { type: Number, required: true },
   gender: { type: String, enum: ["Male", "Female"], required: true },
-  seatId: { type: String, required: true }
+  seatId: { type: String, required: true },
 });
 
 const ContactSchema = new Schema({
@@ -13,9 +13,8 @@ const ContactSchema = new Schema({
   phone: { type: String, required: true },
   email: { type: String, required: true },
   state: { type: String, required: true },
-  whatsappEnabled: { type: Boolean, default: true }
+  whatsappEnabled: { type: Boolean, default: true },
 });
-
 
 const PaymentSchema = new Schema({
   gateway: { type: String, default: "razorpay" },
@@ -24,9 +23,9 @@ const PaymentSchema = new Schema({
   status: {
     type: String,
     enum: ["initiated", "authorized", "captured", "failed", "refunded"],
-    default: "initiated"
+    default: "initiated",
   },
-  raw: Schema.Types.Mixed
+  raw: Schema.Types.Mixed,
 });
 
 const BookingSchema = new Schema<IBooking>(
@@ -45,15 +44,29 @@ const BookingSchema = new Schema<IBooking>(
     status: {
       type: String,
       enum: ["pending", "confirmed", "cancelled", "expired"],
-      default: "pending"
+      default: "pending",
     },
 
     payment: { type: PaymentSchema, required: true },
+    boardingPoint: {
+      name: { type: String, required: true },
+      lat: { type: Number, required: true },
+      lng: { type: Number, required: true },
+      time: String,
+      landmark: String,
+    },
+
+    droppingPoint: {
+      name: { type: String, required: true },
+      lat: { type: Number, required: true },
+      lng: { type: Number, required: true },
+      time: String,
+      landmark: String,
+    },
     reservationUntil: { type: Date },
   },
   { timestamps: true }
 );
-
 
 const BookingModel = mongoose.model<IBooking>("Booking", BookingSchema);
 export default BookingModel;

@@ -162,16 +162,6 @@ export const searchTrips = async (from: string, to: string, date: string, seatTy
 
   const travelDate = new Date(date);
 
-  // const routes = await BusRouteModel.find(
-  //   {
-  //     $and: [
-  //       { "source.name": { $regex: new RegExp(from, "i") } },
-  //       { "destination.name": { $regex: new RegExp(to, "i") } },
-  //     ],
-  //   },
-  //   { _id: 1 }
-  // ).lean();
-
   const routes = await BusRouteModel.find(
   {
     $and: [

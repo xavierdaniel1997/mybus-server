@@ -5,6 +5,7 @@ import BookingModel from "../models/bookingModel";
 import { createRazorpayOrder } from "./paymentService";
 import { Types } from "mongoose";
 import SeatReservationModal from "../models/seatReservationModel";
+import { IGeoPoint } from "../types/busroute";
 
 
 export const holdSeats = async (tripId: string, seatIds: string[], userId: string): Promise<{ expiresAt: Date }> => {
@@ -73,6 +74,8 @@ export type InitiateBookingParams = {
   userId: string;
   passengers: Array<{ price?: number; [key: string]: any }>;
   contact?: { [key: string]: any } | null;
+  boardingPoint: IGeoPoint;
+  droppingPoint: IGeoPoint;
 };
 
 export const initiateBooking = async ({
@@ -80,7 +83,9 @@ export const initiateBooking = async ({
   seatIds,   
   userId,
   passengers,
-  contact
+  contact,
+  boardingPoint,
+  droppingPoint,
 }: InitiateBookingParams) => {  
   // 1) Create seat hold (TTL)
   const { expiresAt } = await holdSeats(tripId, seatIds, userId);
@@ -114,7 +119,9 @@ export const initiateBooking = async ({
     totalAmount,
     status: "pending",
     reservationUntil: expiresAt,
-    payment: { status: "initiated" }
+    payment: { status: "initiated" },
+    boardingPoint,
+  droppingPoint,
   });
 
   // 4) Create Razorpay order
@@ -141,7 +148,7 @@ export const getMyBookings = async (userId: string) => {
       },
     },
 
-    // 1. Lookup the trip details
+    // Trip Lookup
     {
       $lookup: {
         from: "bustrips",
@@ -150,9 +157,9 @@ export const getMyBookings = async (userId: string) => {
         as: "trip",
       },
     },
-    { $unwind: { path: "$trip", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$trip" },
 
-    // 2. Lookup bus inside trip
+    // Bus Lookup
     {
       $lookup: {
         from: "buses",
@@ -161,9 +168,9 @@ export const getMyBookings = async (userId: string) => {
         as: "trip.bus",
       },
     },
-    { $unwind: { path: "$trip.bus", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$trip.bus" },
 
-    // 3. Lookup route inside trip
+    // Route Lookup
     {
       $lookup: {
         from: "busroutes",
@@ -172,9 +179,12 @@ export const getMyBookings = async (userId: string) => {
         as: "trip.route",
       },
     },
-    { $unwind: { path: "$trip.route", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$trip.route" },
 
-    // 4. Add bookingDateOnly (grouping date) + travelDateOnly
+    // One passenger = one row
+    { $unwind: "$passengers" },
+
+    // Add normalized dates
     {
       $addFields: {
         bookingDateOnly: {
@@ -186,59 +196,71 @@ export const getMyBookings = async (userId: string) => {
       },
     },
 
-    // 5. Group by booking created date
+    // FIX: keep travelDateOnly in projection
     {
-      $group: {
-        _id: "$bookingDateOnly",
-        bookings: {
-          $push: {
-            _id: "$_id",
-            seatIds: "$seatIds",
-            passengers: "$passengers",
-            contact: "$contact",
-            totalAmount: "$totalAmount",
-            status: "$status",
-            createdAt: "$createdAt",
-            reservationUntil: "$reservationUntil",
-            payment: "$payment",
+      $project: {
+        _id: 0,
 
-            travelDate: "$travelDateOnly",
+        passenger: "$passengers",
+        seatId: "$passengers.seatId",
 
-            trip: {
-              travelDate: "$trip.travelDate",
-              departureTime: "$trip.departureTime",
-              arrivalTime: "$trip.arrivalTime",
+        bookingId: "$_id",
+        boardingPoint: "$boardingPoint",
+        droppingPoint: "$droppingPoint",
+        contact: 1,
+        totalAmount: 1,
+        status: 1,
+        createdAt: 1,
+        reservationUntil: 1,
+        payment: 1,
 
-              bus: {
-                name: "$trip.bus.name",
-                registrationNo: "$trip.bus.registrationNo",
-                brand: "$trip.bus.brand",
-                layoutName: "$trip.bus.layoutName",
-              },
+        // FIXED: Keep this field so group works
+        travelDateOnly: 1,
 
-              route: {
-                routeName: "$trip.route.routeName",
-                source: "$trip.route.source",
-                destination: "$trip.route.destination",
-              },
-            },
+        travelDate: "$travelDateOnly",
+        bookingDateOnly: 1,
+
+        trip: {
+          travelDate: "$trip.travelDate",
+          departureTime: "$trip.departureTime",
+          arrivalTime: "$trip.arrivalTime",
+          bus: {
+            name: "$trip.bus.name",
+            registrationNo: "$trip.bus.registrationNo",
+            brand: "$trip.bus.brand",
+            layoutName: "$trip.bus.layoutName",
+          },
+          route: {
+            routeName: "$trip.route.routeName",
+            source: "$trip.route.source",
+            destination: "$trip.route.destination",
           },
         },
       },
     },
 
-    // 6. Sort by booking date DESC
-    { $sort: { _id: -1 } },
+    // GROUP BY TRAVEL DATE (now works)
+    {
+      $group: {
+        _id: "$travelDateOnly", // now this field exists
+        tickets: { $push: "$$ROOT" },
+      },
+    },
 
-    // 7. Final output shape
+    // Sort desc
+    { $sort: { travelDateObj: 1  } },
+
+    // Final shape
     {
       $project: {
-        _id: 0,
         date: "$_id",
-        bookings: 1,
+        tickets: 1,
+        _id: 0,
       },
     },
   ]);
 
   return bookings;
 };
+
+

@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { IGeoPoint } from "./busroute";
 
 export interface IPassenger {
   name: string;
@@ -37,4 +38,7 @@ export interface IBooking {
   reservationUntil: Date;
 
   payment: IPayment;
+
+  boardingPoint: IGeoPoint;
+  droppingPoint: IGeoPoint;
 }

@@ -5,6 +5,7 @@ import BookingModel from "../models/bookingModel";
 import BusTripModel from "../models/bustripModel";
 import SeatReservationModal from "../models/seatReservationModel";
 import mongoose from "mongoose";
+import { cancelSeatFromBookingService } from "../service/cancelBookingService";
 
 const reserveBooking = async (req: Request, res: Response) => {
   try {
@@ -61,15 +62,10 @@ const reserveBooking = async (req: Request, res: Response) => {
       userId,
       passengers: processedPassengers,
       contact,
-      // boardingPoint,
-      // droppingPoint,
+      boardingPoint,
+      droppingPoint,
     });
 
-    console.log(
-      "checking the booking and razorpayOrder....",
-      booking,
-      razorpayOrder
-    );
 
     return res.status(200).json({
       success: true,
@@ -160,4 +156,29 @@ const getBookingController = async (req: Request, res: Response) => {
   }
 }
 
-export { reserveBooking, verifyPaymentAndConifrmSeat, getBookingController};
+
+
+
+const cancelSeatFromBookingController = async (req: Request, res: Response) => {
+  try {
+    const { bookingId } = req.params;
+    const { seatId } = req.body;
+
+    if(!bookingId){
+      throw new Error("bookingId is not found")
+    }
+
+    if (!seatId) {
+      return res.status(400).json({ message: "seatId is required" });
+    }
+
+    const result = await cancelSeatFromBookingService(bookingId, seatId);
+
+    return res.status(200).json({message: "Successfully canceled the booking", result});
+  } catch (error) {
+    console.error("CANCEL ERROR:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export { reserveBooking, verifyPaymentAndConifrmSeat, getBookingController, cancelSeatFromBookingController};

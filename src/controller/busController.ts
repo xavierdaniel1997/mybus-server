@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 import {deleteFromCloudinary, uploadMultipleToCloudinary} from "../utils/uploadAssets";
 import {getSeatLayoutById} from "../service/seatLayoutService";
-import {createBusService, getBusDetail, updateBusService} from "../service/busService";
+import {createBusService, getAllBusesService, getBusDetail, updateBusService} from "../service/busService";
 
 const createBusController = async (req: Request, res: Response) => {
   try {
@@ -132,7 +132,6 @@ const getBusDetailController = async (req: Request, res: Response) => {
     if(!busId){
       throw new Error("busId is not found")
     }
-    console.log("bus id...........", busId)
     const busDetail = await getBusDetail(busId);
     res.status(200).json({message: "Successfully fetch the bus detail", data: busDetail})
   }catch(error: any){
@@ -140,4 +139,14 @@ const getBusDetailController = async (req: Request, res: Response) => {
   }
 }
 
-export {createBusController, updateBusController, getBusDetailController};
+const getAllBuses = async (req: Request, res: Response) => {
+  try{
+    const buses = await getAllBusesService();
+    res.status(200).json({message: "Successfully fetch the buses", buses})
+  }catch(error: any){
+    console.log(error)
+    res.status(400).json({message: "Failed to fetch the buses", error: error.message})
+  }
+}
+
+export {createBusController, updateBusController, getBusDetailController, getAllBuses};

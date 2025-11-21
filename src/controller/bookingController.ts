@@ -6,6 +6,7 @@ import BusTripModel from "../models/bustripModel";
 import SeatReservationModal from "../models/seatReservationModel";
 import mongoose from "mongoose";
 import { cancelSeatFromBookingService } from "../service/cancelBookingService";
+import { getBookingDetailService } from "../service/adminBookingDetails";
 
 const reserveBooking = async (req: Request, res: Response) => {
   try {
@@ -181,4 +182,18 @@ const cancelSeatFromBookingController = async (req: Request, res: Response) => {
   }
 };
 
-export { reserveBooking, verifyPaymentAndConifrmSeat, getBookingController, cancelSeatFromBookingController};
+
+const getBookingDetailsByBus = async (req: Request, res: Response) => {
+  try{
+    const {busId} = req.params;
+    if(!busId){
+      throw new Error("bus_id is not found")
+    }
+    const result = await getBookingDetailService(busId)
+    res.status(200).json({message: "Successfully fetch the booking details", data: result})
+  }catch(error: any){
+    res.status(400).json({message: "Failed to fetch the booking details by bus"})
+  }
+}
+
+export { reserveBooking, verifyPaymentAndConifrmSeat, getBookingController, cancelSeatFromBookingController, getBookingDetailsByBus};

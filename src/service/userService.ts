@@ -18,3 +18,11 @@ export const findUserById = async (userId: string) : Promise<IUser | null> => {
     console.log("userId", userId)
     return await UserModel.findById(userId)
 }
+
+export const getAllUsers = async (skip: number, limit: number) => {
+    const users = await UserModel.find().skip(skip).limit(limit).sort({createdAt: -1})
+    const totalCount = await UserModel.countDocuments();
+    return {users, totalCount}
+}
+
+ 

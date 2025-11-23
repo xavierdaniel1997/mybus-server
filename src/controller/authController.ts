@@ -136,11 +136,13 @@ const registerVerifiedUser = async (
       sameSite: "strict",
       maxAge: 2 * 24 * 60 * 60 * 1000,
     });
-    res.setHeader("Authorization", `Bearer ${accessToken}`);
+    // res.setHeader("Authorization", `Bearer ${accessToken}`);
+    const expiresIn = 15 * 60; 
     res.status(200).json({
       user: newUser,
       accessToken,
-      mesage: "User registered successfully",
+      expiresIn,
+      message: "User registered successfully",
     });
   } catch (error: any) {
     res.status(401).json({
@@ -170,7 +172,6 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
     if (!matchPassword) {
       throw new Error("Invalid credentials");
     }
-    console.log("after successfull login userData", userData);
     if (
       !userData._id ||
       !userData.role ||
@@ -200,10 +201,11 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
       sameSite: "strict",
       maxAge: 2 * 24 * 60 * 60 * 1000,
     });
-    res.setHeader("Authorization", `Bearer ${accessToken}`);
+    // res.setHeader("Authorization", `Bearer ${accessToken}`);
+     const expiresIn = 15 * 60; 
     res
       .status(200)
-      .json({ user: userData, accessToken, expiresIn: 15 * 60, message: "Login successfully" });
+      .json({ user: userData, accessToken, expiresIn, message: "Login successfully" });
   } catch (error: any) {
     res.status(401).json({
       message: error.message || "Failed to login",
@@ -214,7 +216,7 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
 
 const logoutUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    res.clearCookie("refrreshToken", {
+    res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
@@ -240,7 +242,8 @@ const refreshAccessToken = async (req: Request, res: Response) => {
       decoded.lastName,
       decoded.email
     );
-    return res.status(200).json({ accessToken: newAccessToken , expiresIn: 15 * 60, });
+    const expiresIn = 15 * 60; 
+    return res.status(200).json({ accessToken: newAccessToken , expiresIn, });
   } catch (error: any) {
     return res
       .status(403)

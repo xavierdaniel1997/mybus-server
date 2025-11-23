@@ -1,6 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken } from "../utils/generateToken";
 
+interface AuthUserPayload {
+  _id: string;
+  role: string;
+  firstName: string;
+  secondName: string;
+  email: string;
+  iat?: number;
+  exp?: number;
+}
+
 declare global {
   namespace Express {
     interface Request {
@@ -17,7 +27,10 @@ export const isAuth = (req: Request, res: Response, next: NextFunction) => {
       return res.status(401).json({ error: "No token provided" });
     }
     const token = authHeader.split(" ")[1]
-    const decoded = verifyAccessToken(token!) 
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+    const decoded = verifyAccessToken(token) as AuthUserPayload;
     req.user = decoded;
     next();
   } catch (error: any) {

@@ -18,7 +18,7 @@ export const generateRefreshToken = (_id: string, role: string, firstName: strin
     return jwt.sign(
         { _id, role, firstName, secondName, email },
         REFRESH_SECRET,
-        { expiresIn: "1d" }
+        { expiresIn: "2d" }
     )
 }
 

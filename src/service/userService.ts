@@ -1,5 +1,5 @@
 import UserModel from "../models/userModel"
-import { IUser } from "../types/user"
+import { IUser, IUserRole } from "../types/user"
 
 export const findByEmail = async (email: string) : Promise<IUser | null> => {
     return await UserModel.findOne({ email })
@@ -20,7 +20,8 @@ export const findUserById = async (userId: string) : Promise<IUser | null> => {
 }
 
 export const getAllUsers = async (skip: number, limit: number) => {
-    const users = await UserModel.find().skip(skip).limit(limit).sort({createdAt: -1})
+    const filter = { role: IUserRole.USER }; 
+    const users = await UserModel.find(filter).select("-password").skip(skip).limit(limit).sort({createdAt: -1})
     const totalCount = await UserModel.countDocuments();
     return {users, totalCount}
 }

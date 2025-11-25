@@ -8,6 +8,7 @@ import bustripScheduleRoute from './busTripScheduleRoute';
 import userRoute from "./userRoutes";
 import confirmBusRoute from "./confirmBusRoute";
 import bookingRoute from "./bookingRoute";
+import dashboardRoute from "./dashboard";
 
 const router = express.Router();
 
@@ -20,5 +21,6 @@ router.use("/mytrips", bustripScheduleRoute);
 router.use("/users", userRoute);
 router.use("/admin-mybus", confirmBusRoute);
 router.use("/booking", bookingRoute);
+router.use("/dashboard", dashboardRoute);
 
 export default router;

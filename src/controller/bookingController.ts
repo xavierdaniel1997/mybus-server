@@ -21,8 +21,6 @@ const reserveBooking = async (req: Request, res: Response) => {
 
     const userId = req.user._id;
 
-    console.log("checking the data of booking", req.body, "and user", userId);
-
     if (!tripId || !Array.isArray(seatIds) || seatIds.length === 0) {
       return res.status(400).json({
         success: false,
@@ -88,7 +86,7 @@ const reserveBooking = async (req: Request, res: Response) => {
 
 
 
-const verifyPaymentAndConifrmSeat = async (req: Request, res: Response) => {
+const verifyPaymentAndConfirmSeat = async (req: Request, res: Response) => {
   try {
     const {
       razorpay_order_id,
@@ -98,6 +96,8 @@ const verifyPaymentAndConifrmSeat = async (req: Request, res: Response) => {
       tripId,
       seatIds
     } = req.body;
+
+    console.log("checking the verifyPaymentAndConfirmSeat", req.body)
 
     const body = razorpay_order_id + "|" + razorpay_payment_id;
 
@@ -196,4 +196,4 @@ const getBookingDetailsByBus = async (req: Request, res: Response) => {
   }
 }
 
-export { reserveBooking, verifyPaymentAndConifrmSeat, getBookingController, cancelSeatFromBookingController, getBookingDetailsByBus};
+export { reserveBooking, verifyPaymentAndConfirmSeat, getBookingController, cancelSeatFromBookingController, getBookingDetailsByBus};

@@ -23,7 +23,8 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.9",
     "otp-generator": "^4.0.1",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "stripe": "^20.0.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
@@ -37,6 +38,7 @@
     "@types/node": "^24.6.2",
     "@types/nodemailer": "^7.0.2",
     "@types/otp-generator": "^4.0.2",
+    "@types/stripe": "^8.0.416",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

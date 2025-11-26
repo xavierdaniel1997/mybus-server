@@ -9,7 +9,7 @@ export interface IPassenger {
 }
 
 export interface IPayment {
-  gateway: "razorpay";
+  gateway: "razorpay" | "stripe";
   gatewayOrderId?: string;
   gatewayPaymentId?: string;
   status: "initiated" | "authorized" | "captured" | "failed" | "refunded";

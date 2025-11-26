@@ -16,8 +16,15 @@ const ContactSchema = new Schema({
   whatsappEnabled: { type: Boolean, default: true },
 });
 
+
+
 const PaymentSchema = new Schema({
-  gateway: { type: String, default: "razorpay" },
+  // gateway: { type: String, default: "razorpay" },
+  gateway: { 
+  type: String, 
+  enum: ["razorpay", "stripe"], 
+  default: "razorpay" 
+},
   gatewayOrderId: String,
   gatewayPaymentId: String,
   status: {

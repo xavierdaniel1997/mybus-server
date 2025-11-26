@@ -1,37 +1,47 @@
 import Razorpay from "razorpay";
 import BookingModel from "../models/bookingModel";
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY!,
-  key_secret: process.env.RAZORPAY_SECRET!,
-});
+
 
 export const createRazorpayOrder = async ({
   bookingId,
   amount,
 }: {
   bookingId: string;
-  amount: number;
+  amount: number; 
 }) => {
+  if (!amount || amount <= 0) throw new Error("Invalid Razorpay amount");
+
   const options = {
-    amount: Math.round(amount), 
+    amount,        
     currency: "INR",
     receipt: bookingId,
   };
 
-  const order = await razorpay.orders.create(options);
+  const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY as string,
+  key_secret: process.env.RAZORPAY_SECRET as string,
+});
 
-  if (!order?.id) {
-    throw new Error("Failed to create Razorpay order");
+  console.log("process.env.RAZORPAY_KEY", process.env.RAZORPAY_KEY)
+
+  console.log("Creating Razorpay Order with:", options);
+  
+  try {
+    const order = await razorpay.orders.create(options);
+    console.log("Razorpay order created:", order);
+
+    await BookingModel.findByIdAndUpdate(bookingId, {
+      $set: {
+        "payment.gatewayOrderId": order.id,
+        "payment.status": "initiated",
+        "payment.raw": order,
+      },
+    });
+
+    return order;
+  } catch (err) {
+    console.error("Razorpay order creation failed:", err);
+    throw err;
   }
-
-  await BookingModel.findByIdAndUpdate(bookingId, {
-    $set: {
-      "payment.gatewayOrderId": order.id,
-      "payment.status": "initiated",
-      "payment.raw": order,
-    },
-  });
-
-  return order;
 };

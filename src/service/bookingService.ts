@@ -6,6 +6,7 @@ import { createRazorpayOrder } from "./paymentService";
 import { Types } from "mongoose";
 import SeatReservationModal from "../models/seatReservationModel";
 import { IGeoPoint } from "../types/busroute";
+import Stripe from "stripe";
 
 
 export const holdSeats = async (tripId: string, seatIds: string[], userId: string): Promise<{ expiresAt: Date }> => {
@@ -87,7 +88,7 @@ export const initiateBooking = async ({
   boardingPoint,
   droppingPoint,
 }: InitiateBookingParams) => {  
-  // 1) Create seat hold (TTL)
+
   const { expiresAt } = await holdSeats(tripId, seatIds, userId);
 
 
@@ -99,17 +100,15 @@ export const initiateBooking = async ({
     seatMap[s.seatId] = s.price;
   });
 
-  // 3. Compute amount ONLY from backend pricing
+  
   const totalAmount = seatIds.reduce((acc, seatId) => {
     return acc + (seatMap[seatId] || 0);
   }, 0);
 
-  if (totalAmount <= 0) {
-    throw new Error("Invalid seat pricing – total amount is zero");
-  }
+  console.log("checking the total amout to be paid#######################", totalAmount)
 
+  if (totalAmount <= 0) throw new Error("Invalid total amount");
 
-  // 3) Create booking in pending state
   const booking = await BookingModel.create({
     trip: tripId,
     user: userId,
@@ -124,10 +123,13 @@ export const initiateBooking = async ({
   droppingPoint,
   });
 
-  // 4) Create Razorpay order
+    
+  
+  const amountInPaise = Math.round(totalAmount * 100);
+
   const razorpayOrder = await createRazorpayOrder({
     bookingId: booking._id.toString(),
-    amount: totalAmount * 100,
+    amount: amountInPaise,
   });
 
   booking.payment.gatewayOrderId = razorpayOrder.id;
@@ -136,6 +138,61 @@ export const initiateBooking = async ({
 
   return { booking, razorpayOrder };
 };
+
+
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+// export const createCheckoutSessionForBooking = async (bookingId: string, successUrl: string, cancelUrl: string) => {
+//   const booking = await BookingModel.findById(bookingId).populate("trip");
+//   if (!booking) throw new Error("Booking not found");
+
+
+//   const trip = await BusTripModel.findById(booking.trip);
+//   if (!trip) throw new Error("Trip not found when creating checkout session");
+
+
+//   const seatMap: Record<string, number> = {};
+//   (trip.seatPricing || []).forEach((s: any) => (seatMap[s.seatId] = s.price || 0));
+//   const totalAmount = booking.seatIds.reduce((acc: number, id: string) => acc + (seatMap[id] || 0), 0);
+//   if (totalAmount <= 0) throw new Error("Invalid total amount");
+
+//   const amountInPaise = Math.round(totalAmount * 100);
+
+//   // Create Checkout Session
+//   const session = await stripe.checkout.sessions.create({
+//     payment_method_types: ["card"],
+//     mode: "payment",
+//     currency: "inr",
+//     line_items: [{
+//       price_data: {
+//         currency: "inr",
+//         product_data: {
+//           name: `Bus booking ${booking._id}`,
+//           description: `Seats: ${booking.seatIds.join(", ")}`,
+//         },
+//         unit_amount: amountInPaise,
+//       },
+//       quantity: 1,
+//     }],
+//     metadata: {
+//       bookingId: booking._id.toString(),
+//       tripId: booking.trip.toString(),
+//       seatIds: booking.seatIds.join(","),
+//     },
+    
+//   }, {
+//     idempotencyKey: `checkout_session_${booking._id}`,
+//   });
+
+//     booking.payment.gateway = "stripe";
+//   booking.payment.gatewayOrderId = session.id;
+//   booking.payment.raw = session;
+//   await booking.save();
+//   await booking.save();
+
+//   return session;
+// };
 
 
 

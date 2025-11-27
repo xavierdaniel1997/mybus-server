@@ -2,6 +2,7 @@ import BookingModel from "../models/bookingModel";
 import BusRouteModel from "../models/busrouteModel";
 import BusTripModel from "../models/bustripModel";
 import UserModel from "../models/userModel";
+import { IUserRole } from "../types/user";
 import { getRangeDates, Range } from "../utils/date";
 
 
@@ -232,17 +233,18 @@ async function getRecentBookings(limit = 5) {
     .sort({ createdAt: -1 })
     .limit(limit)
     .populate({
-      path: "trip",
-      populate: [{ path: "bus" }, { path: "route" }],
+      path: "trip", select: "-seatPricing",
+      populate: [{ path: "bus", select: "name registrationNo brand busType layoutName" }, { path: "route", select: "routeName" }],
     })
-    .populate("user", "firstName lastName email");
+    .populate("user", "firstName lastName email phone");
 }
-
+  
 
 
 async function getNewUsers(limit = 5) {
-  return UserModel.find()
+    const filter = { role: IUserRole.USER }
+  return UserModel.find(filter)
     .sort({ createdAt: -1 })
     .limit(limit)
-    .select("name email phone status createdAt");
+    .select("firstName lastName email phone status createdAt");
 }

@@ -33,12 +33,10 @@ app.get("/", (req: Request, res: Response) => {
     res.json({message: "test message form the mybus server"})
 })
 
-app.post("/api/booking/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
+// app.post("/api/booking/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
 
-// For webhook: save raw body on request so we can verify signature
 app.post("/api/webhooks/razorpay", bodyParser.raw({ type: "*/*" }), (req, res, next) => {
   (req as any).rawBody = req.body;
-  // delegate to handler in webhook router
   webhookRouter(req, res, next);
 });
 

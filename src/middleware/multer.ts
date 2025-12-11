@@ -15,19 +15,3 @@ export const upload = multer({
   fileFilter,
   limits: { fileSize: 10 * 1024 * 1024 }, 
 });
-
-
-/*
-const pdfFileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-    if (file.mimetype !== 'application/pdf') {
-      return cb(new Error('Only PDF files are allowed'));
-    }
-    cb(null, true);
-  };
-  
-  export const uploadPdfs = multer({
-    storage,
-    fileFilter: pdfFileFilter,
-    limits: { fileSize: 10 * 1024 * 1024 }, 
-  });
-*/

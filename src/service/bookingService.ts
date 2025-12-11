@@ -42,7 +42,7 @@ export const holdSeats = async (tripId: string, seatIds: string[], userId: strin
     }
 
     // 3. Create TTL reservation
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    const expiresAt = new Date(Date.now() + 2 * 60 * 1000); 
 
     await SeatReservationModal.insertMany(
       seatIds.map(seat => ({
@@ -104,8 +104,6 @@ export const initiateBooking = async ({
   const totalAmount = seatIds.reduce((acc, seatId) => {
     return acc + (seatMap[seatId] || 0);
   }, 0);
-
-  console.log("checking the total amout to be paid#######################", totalAmount)
 
   if (totalAmount <= 0) throw new Error("Invalid total amount");
 

@@ -19,23 +19,23 @@ dotenv.config()
 connectDB()
 
 const allowedOrigin = process.env.CLIENT_ORIGIN;
-// app.use(cors({
-//     origin: allowedOrigin,
-//     credentials: true,
-//     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-// }))
-
 app.use(cors({
-  origin: allowedOrigin,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "Accept",
-    "X-Requested-With"
-  ],
-}));
+    origin: allowedOrigin,
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+}))
+
+// app.use(cors({
+//   origin: allowedOrigin,
+//   credentials: true,
+//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//   allowedHeaders: [
+//     "Content-Type",
+//     "Authorization",
+//     "Accept",
+//     "X-Requested-With"
+//   ],
+// }));
 
 
 
@@ -49,7 +49,6 @@ app.get("/", (req: Request, res: Response) => {
     res.json({message: "test message form the mybus server"})
 })
 
-// app.post("/api/booking/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
 
 app.post("/api/webhooks/razorpay", bodyParser.raw({ type: "*/*" }), (req, res, next) => {
   (req as any).rawBody = req.body;

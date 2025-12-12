@@ -19,11 +19,26 @@ dotenv.config()
 connectDB()
 
 const allowedOrigin = process.env.CLIENT_ORIGIN;
+// app.use(cors({
+//     origin: allowedOrigin,
+//     credentials: true,
+//     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+// }))
+
 app.use(cors({
-    origin: allowedOrigin,
-    credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-}))
+  origin: allowedOrigin,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Accept",
+    "X-Requested-With"
+  ],
+}));
+
+app.options("*", cors());
+
 
 // app.use(express.json())
 app.use(express.json({ limit: "10mb" }));
